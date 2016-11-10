@@ -4,6 +4,8 @@ import std.random;
 import std.datetime;
 import std.algorithm;
 import std.process : execute;
+import std.json;
+import fs = std.file;
 
 enum StartLevel = 10;
 enum HoldThreshold = 6;
@@ -31,10 +33,10 @@ enum Tetromino : ubyte
 
 static immutable ubyte[][][] rotations = [
 	// Tetromino.I
-    [[0,0,0,0, 0,0,1,0, 0,0,0,0, 0,1,0,0],
-     [1,1,1,1, 0,0,1,0, 0,0,0,0, 0,1,0,0],
-     [0,0,0,0, 0,0,1,0, 1,1,1,1, 0,1,0,0],
-     [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,1,0,0]],
+	[[0,0,0,0, 0,0,1,0, 0,0,0,0, 0,1,0,0],
+	 [1,1,1,1, 0,0,1,0, 0,0,0,0, 0,1,0,0],
+	 [0,0,0,0, 0,0,1,0, 1,1,1,1, 0,1,0,0],
+	 [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,1,0,0]],
 	 // Tetromino.L
 	[[0,0,1, 0,1,0, 0,0,0, 1,1,0],
 	 [1,1,1, 0,1,0, 1,1,1, 0,1,0],
@@ -398,18 +400,27 @@ void cls( HANDLE hConsole )
 }
 
 void main() {
-    wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
-    rHnd = GetStdHandle(STD_INPUT_HANDLE);
+	wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
+	rHnd = GetStdHandle(STD_INPUT_HANDLE);
+	
+	auto controls = parseJSON(fs.readText("controls.json"));
+	auto key_hold = controls["hold"].integer;
+	auto key_hardDrop = controls["hard drop"].integer;
+	auto key_softDrop = controls["soft drop"].integer;
+	auto key_spinL = controls["spin left"].integer;
+	auto key_spinR = controls["spin right"].integer;
+	auto key_moveL = controls["move left"].integer;
+	auto key_moveR = controls["move right"].integer;
 	
 	cls(wHnd);
 
-    SetConsoleTitleA("Tetris".toStringz);
+	SetConsoleTitleA("Tetris".toStringz);
 
-    SMALL_RECT windowSize = {0, 0, Width - 1, Height - 1};
-    SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
+	SMALL_RECT windowSize = {0, 0, Width - 1, Height - 1};
+	SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
 
-    COORD bufferSize = {Width, Height};
-    SetConsoleScreenBufferSize(wHnd, bufferSize);
+	COORD bufferSize = {Width, Height};
+	SetConsoleScreenBufferSize(wHnd, bufferSize);
 	
 	Game game;
 
@@ -425,8 +436,8 @@ void main() {
 	white.Attributes =
 			BACKGROUND_BLUE |
 			BACKGROUND_GREEN |
-            BACKGROUND_RED |
-            BACKGROUND_INTENSITY;
+			BACKGROUND_RED |
+			BACKGROUND_INTENSITY;
 	gray.AsciiChar = '#';
 	gray.Attributes =
 			FOREGROUND_INTENSITY;
@@ -434,34 +445,34 @@ void main() {
 	tetrominoColor[Tetromino.I].AsciiChar = ' ';
 	tetrominoColor[Tetromino.I].Attributes =
 			BACKGROUND_BLUE |
-            BACKGROUND_INTENSITY;
+			BACKGROUND_INTENSITY;
 	tetrominoColor[Tetromino.L].AsciiChar = ' ';
 	tetrominoColor[Tetromino.L].Attributes =
 			BACKGROUND_RED |
 			BACKGROUND_GREEN;
 	tetrominoColor[Tetromino.J].AsciiChar = ' ';
 	tetrominoColor[Tetromino.J].Attributes =
-            BACKGROUND_BLUE;
+			BACKGROUND_BLUE;
 	tetrominoColor[Tetromino.T].AsciiChar = ' ';
 	tetrominoColor[Tetromino.T].Attributes =
 			BACKGROUND_BLUE |
-            BACKGROUND_RED;
+			BACKGROUND_RED;
 	tetrominoColor[Tetromino.S].AsciiChar = ' ';
 	tetrominoColor[Tetromino.S].Attributes =
 			BACKGROUND_GREEN |
-            BACKGROUND_INTENSITY;
+			BACKGROUND_INTENSITY;
 	tetrominoColor[Tetromino.Z].AsciiChar = ' ';
 	tetrominoColor[Tetromino.Z].Attributes =
 			BACKGROUND_RED |
-            BACKGROUND_INTENSITY;
+			BACKGROUND_INTENSITY;
 	tetrominoColor[Tetromino.O].AsciiChar = ' ';
 	tetrominoColor[Tetromino.O].Attributes =
 			BACKGROUND_RED |
 			BACKGROUND_GREEN |
-            BACKGROUND_INTENSITY;
+			BACKGROUND_INTENSITY;
 	tetrominoColor[Tetromino.None].AsciiChar = ' ';
 			
-    CHAR_INFO[Width * Height] consoleBuffer;
+	CHAR_INFO[Width * Height] consoleBuffer;
 	consoleBuffer[] = black;
 	for (int i = 1; i < Height - 1; i++)
 	{
@@ -516,12 +527,12 @@ void main() {
 	//  >+----------+ LVL 01
 	//20
 	
-    COORD charBufSize = {Width, Height};
-    COORD characterPos = {0, 0};
-    SMALL_RECT gameDrawArea = {0, 0, Width - 1, Height - 1};
+	COORD charBufSize = {Width, Height};
+	COORD characterPos = {0, 0};
+	SMALL_RECT gameDrawArea = {0, 0, Width - 1, Height - 1};
 
-    DWORD numEvents = 0;
-    DWORD numEventsRead = 0;
+	DWORD numEvents = 0;
+	DWORD numEventsRead = 0;
 	
 	version (AutoPlay)
 	{
@@ -533,15 +544,15 @@ void main() {
 	inputWatch.start();
 
 	game.start();
-    bool running = true;
+	bool running = true;
 	bool paused = false;
 	
 	bool softDrop = false;
 	bool left, right;
 	int holdFrames = 0;
 	
-    while (running) {
-        GetNumberOfConsoleInputEvents(rHnd, &numEvents);
+	while (running) {
+		GetNumberOfConsoleInputEvents(rHnd, &numEvents);
 
 		if (!paused)
 			game.update();
@@ -642,56 +653,53 @@ void main() {
 			}
 		}
 		
-        if (numEvents != 0) {
-            INPUT_RECORD[] eventBuffer = new INPUT_RECORD[numEvents];
-            ReadConsoleInputA(rHnd, eventBuffer.ptr, numEvents, &numEventsRead);
+		if (numEvents != 0) {
+			INPUT_RECORD[] eventBuffer = new INPUT_RECORD[numEvents];
+			ReadConsoleInputA(rHnd, eventBuffer.ptr, numEvents, &numEventsRead);
 
 			foreach (event; eventBuffer[0 .. numEventsRead]) {
-                if (event.EventType == KEY_EVENT) {
+				if (event.EventType == KEY_EVENT) {
 					if (event.KeyEvent.bKeyDown) {
 						if (event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)
 							paused = !paused;
 						if (paused)
 							continue;
-						if (event.KeyEvent.wVirtualKeyCode == 68) { // d
+						if (event.KeyEvent.wVirtualKeyCode == key_moveL) {
 							game.moveLeft();
 							left = true;
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 75) { // k
+						else if (event.KeyEvent.wVirtualKeyCode == key_moveR) {
 							game.moveRight();
 							right = true;
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 69) { // e
+						else if (event.KeyEvent.wVirtualKeyCode == key_spinL) {
 							game.rotateLeft();
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 73) { // i
+						else if (event.KeyEvent.wVirtualKeyCode == key_spinR) {
 							game.rotateRight();
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 79) { // o
+						else if (event.KeyEvent.wVirtualKeyCode == key_hold) {
 							game.holdPiece();
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 81) { // q
-							running = false;
-						}
-						else if (event.KeyEvent.wVirtualKeyCode == 32) { // space
+						else if (event.KeyEvent.wVirtualKeyCode == key_hardDrop) {
 							game.hardDrop();
 						}
-						else if (event.KeyEvent.wVirtualKeyCode == 16) { // shift
+						else if (event.KeyEvent.wVirtualKeyCode == key_softDrop) {
 							softDrop = true;
 						}
 					}
 					else {
-						if (event.KeyEvent.wVirtualKeyCode == 16) // shift
+						if (event.KeyEvent.wVirtualKeyCode == key_softDrop)
 							softDrop = false;
-						else if (event.KeyEvent.wVirtualKeyCode == 68) // d
+						else if (event.KeyEvent.wVirtualKeyCode == key_moveL)
 							left = false;
-						else if (event.KeyEvent.wVirtualKeyCode == 75) // k
+						else if (event.KeyEvent.wVirtualKeyCode == key_moveR)
 							right = false;
 					}
-                }
-            }
-        }
+				}
+			}
+		}
 		
 		
-    }
+	}
 }

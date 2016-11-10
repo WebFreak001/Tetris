@@ -1,0 +1,9 @@
+{
+	"hold": 16,
+	"spin left": 17,
+	"hard drop": 32,
+	"spin right": 38,
+	"move left": 37,
+	"move right": 39,
+	"soft drop": 40
+}
