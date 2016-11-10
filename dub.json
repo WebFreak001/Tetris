@@ -1,0 +1,8 @@
+{
+	"name": "tetris",
+	"description": "win32 tetris",
+	"copyright": "Copyright © 2016, webfreak",
+	"authors": ["webfreak"],
+	"dependencies": {
+	}
+}
