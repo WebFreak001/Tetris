@@ -1,7 +1,7 @@
 import core.sys.windows.windows;
 import std.string;
 import std.random;
-import std.datetime;
+import std.datetime.stopwatch;
 import std.algorithm;
 import std.process : execute;
 import std.json;
@@ -81,7 +81,7 @@ struct Game
 
 	void update()
 	{
-		if (updateTimer.peek.to!("msecs", int) > tickTime)
+		if (updateTimer.peek.total!"msecs" > tickTime)
 		{
 			updateTimer.reset();
 			updateTimer.start();
@@ -219,7 +219,7 @@ struct Game
 			placeTimer.reset();
 			placeTimer.start();
 		}
-		else if (placeTimer.peek.to!("msecs", int) >= 200)
+		else if (placeTimer.peek.total!"msecs" >= 200)
 		{
 			forcePlace();
 		}
@@ -358,7 +358,7 @@ struct Game
 
 void drawPiece(ref CHAR_INFO[Width * Height] consoleBuffer, Tetromino tetromino, ubyte rotation, int targetX, int targetY, CHAR_INFO color) {
 	const col = Game.collision(tetromino, rotation);
-	for (int y = col.length - 1; y >= 0; y--)
+	for (int y = cast(int)col.length - 1; y >= 0; y--)
 		for (int x = 0; x < col[y].length; x++)
 			if (col[y][x] == 1)
 			{
@@ -607,7 +607,7 @@ void main() {
 			consoleBuffer[Width * 8 + 7].AsciiChar = 'E';
 			consoleBuffer[Width * 8 + 8].AsciiChar = 'D';
 		}
-		else if (inputWatch.peek.to!("msecs", int) > 20)
+		else if (inputWatch.peek.total!"msecs" > 20)
 		{
 			inputWatch.reset();
 			inputWatch.start();
